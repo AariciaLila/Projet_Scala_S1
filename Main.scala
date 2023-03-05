@@ -1,4 +1,5 @@
 import scala.collection.immutable.ArraySeq
+import scala.io.Source
 
 /**
  * Main app containg program loop
@@ -47,6 +48,7 @@ object Main extends App {
       case "dummy" => Canvas.dummy
       case "dummy2" => Canvas.dummy2
       case "new_canvas" => Canvas.new_canvas
+      case "load_image" => Canvas.load_image
       case _ => Canvas.default
     }
 
@@ -201,4 +203,29 @@ object Canvas {
       (new_canvasCanvas, Status())
     }
   }
+
+  def load_image(arguments: Seq[String], canvas: Canvas): (Canvas, Status) =
+    if (arguments.size < 1)
+      (canvas, Status(error = true, message = "load_image action expects one argument"))
+    else {
+      val filename = arguments(0)
+      try {
+        val content: Vector[String] = Source.fromFile(filename).getLines().toVector
+        val pixels = content.map { line =>
+          line.map(char => Pixel(0, 0, char)).toVector
+        }
+        val newCanvas = Canvas(pixels(0).size, pixels.size, pixels)
+        // Print canvas
+        newCanvas.pixels.foreach { row =>
+          row.foreach { pixel =>
+            print(pixel.color)
+          }
+          println()
+        }
+        (newCanvas, Status())
+      } catch {
+        case e: Exception => (canvas, Status(error = true, message = s"Image loading error: $e."))
+      }
+    }
+
 }
