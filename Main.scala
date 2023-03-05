@@ -19,9 +19,10 @@ object Main extends App {
    */
   def run(canvas: Canvas = Canvas()): Status = {
     println("\n======\nCanvas:")
-    canvas.display
+
 
     print("\nAction: ")
+    canvas.display
 
     val action = scala.io.StdIn.readLine()
 
@@ -106,7 +107,9 @@ case class Canvas(width: Int = 0, height: Int = 0, pixels: Vector[Vector[Pixel]]
       println("Empty Canvas")
     } else {
       println(s"Size: $width x $height")
-      // TODO
+      for (row <- pixels) {
+      println(row.mkString(""))
+    }
     }
   }
 
