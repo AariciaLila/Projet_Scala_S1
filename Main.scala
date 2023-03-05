@@ -46,7 +46,7 @@ object Main extends App {
       case "exit" => Canvas.exit
       case "dummy" => Canvas.dummy
       case "dummy2" => Canvas.dummy2
-      // TODO: Add command here
+      case "new_canvas" => Canvas.new_canvas
       case _ => Canvas.default
     }
 
@@ -188,5 +188,17 @@ object Canvas {
       (dummyCanvas, Status())
     }
 
-  // TODO: Add any useful method
+  def new_canvas(arguments: Seq[String], canvas: Canvas): (Canvas, Status) = {
+    if (arguments.size < 3) {
+      (canvas, Status(error = false, message = "new_canvas action does not have enough arguments"))
+    } else {
+      val new_canvasCanvas = Canvas(
+        width = arguments(0).toInt,
+        height = arguments(1).toInt,
+        pixels = Vector.fill(arguments(1).toInt)(Vector.fill(arguments(0).toInt)(Pixel(0, 0, arguments(2).head)))
+      )
+
+      (new_canvasCanvas, Status())
+    }
+  }
 }
