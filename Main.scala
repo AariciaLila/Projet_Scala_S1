@@ -19,10 +19,9 @@ object Main extends App {
    */
   def run(canvas: Canvas = Canvas()): Status = {
     println("\n======\nCanvas:")
-
+    canvas.display
 
     print("\nAction: ")
-    canvas.display
 
     val action = scala.io.StdIn.readLine()
 
@@ -81,17 +80,17 @@ object Pixel {
    * Create a Pixel from a string "x,y"
    */
   def apply(s: String): Pixel = {
-    // TODO
-    Pixel(0, 0)
-  }
+val coordinates = s.split(",").map(_.toInt)
+Pixel(coordinates(0), coordinates(1), '.')
+}
 
   /**
    * Create a Pixel from a string "x,y" and a color 
    */
   def apply(s: String, color: Char): Pixel = {
-    // TODO
-    Pixel(0, 0)
-  }
+val coordinates = s.split(",").map(_.toInt)
+Pixel(coordinates(0), coordinates(1), color)
+}
 }
 
 /**
