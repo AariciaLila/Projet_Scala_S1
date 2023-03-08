@@ -52,6 +52,7 @@ object Main extends App {
       case "update_pixel" => Canvas.update_pixel
       case "draw_line" => Canvas.draw_line
       case "draw_rectangle" => Canvas.draw_rectangle
+      case "draw_fill" => Canvas.draw_fill
       case _ => Canvas.default
     }
 
@@ -195,7 +196,7 @@ object Canvas {
 
   def new_canvas(arguments: Seq[String], canvas: Canvas): (Canvas, Status) = {
     if (arguments.size < 3) {
-      (canvas, Status(error = false, message = "new_canvas action does not have enough arguments"))
+      (canvas, Status(error = false, message = "new_canvas action expects 3 arguments"))
     } else {
       val new_canvasCanvas = Canvas(
         width = arguments(0).toInt,
@@ -209,20 +210,15 @@ object Canvas {
 
   def update_pixel(arguments: Seq[String], canvas: Canvas): (Canvas, Status) = {
     if (arguments.size < 3) {
-      (canvas, Status(error = true, message = s"update_pixel action expects 3 arguments."))
+      (canvas, Status(error = true, message = s"update_pixel action expects 3 arguments"))
     } else {
       val x = arguments(0).toInt
       val y = arguments(1).toInt
       val color = arguments(2).head
       val canvas_update = canvas.update(Pixel(x, y, color))
       
-      // Print canvas
-      canvas_update.pixels.foreach { row =>
-        row.foreach { pixel =>
-          print(pixel.color)
-        }
-        println()
-      }
+      val canvas_rows = canvas_update.pixels.map(_.map(_.color).mkString(""))
+      println(canvas_rows.mkString("\n"))
       (canvas_update, Status())
     }
   }
@@ -252,7 +248,7 @@ object Canvas {
 
   def draw_rectangle(arguments: Seq[String], canvas: Canvas): (Canvas, Status) = {
   if (arguments.size < 3) {
-    (canvas, Status(error = true, message = s"draw_rectangle action expects 3 arguments."))
+    (canvas, Status(error = true, message = s"draw_rectangle action expects 3 arguments"))
   } else {
     val pixel1 = Pixel(arguments(0))
     val pixel2 = Pixel(arguments(1))
@@ -273,10 +269,38 @@ object Canvas {
       (updatedCanvas, Status())
     }
   }
+  }
+
+  def draw_fill(arguments: Seq[String], canvas: Canvas): (Canvas, Status) = {
+  if (arguments.size > 2) {
+    return (canvas, Status(error = true, message = s"draw_fill action expects 2 arguments"))
+  }
+
+  val pixel = Pixel(arguments(0))
+  val new_color = arguments(1).charAt(0)
+  val adjoining_colour = canvas.pixels(pixel.y)(pixel.x).color
+
+  def draw_fill_recursive(x: Int, y: Int, canvas: Canvas): Canvas = {
+  if (x < 0 || x >= canvas.width || y < 0 || y >= canvas.height || canvas.pixels(y)(x).color != adjoining_colour) {
+    canvas
+  } else {
+    val updated_canvas = canvas.update(Pixel(x, y, new_color))
+    val updated_right = draw_fill_recursive(x + 1, y, updated_canvas)
+    val updated_left = draw_fill_recursive(x - 1, y, updated_right)
+    val updated_down = draw_fill_recursive(x, y + 1, updated_left)
+    val updated_up = draw_fill_recursive(x, y - 1, updated_down)
+    updated_up
+  }
 }
 
 
+  val update_canvas = draw_fill_recursive(pixel.x, pixel.y, canvas)
 
+  val canvas_rows = update_canvas.pixels.map(_.map(_.color).mkString(""))
+  println(canvas_rows.mkString("\n"))
+
+  (update_canvas, Status())
+}
 
   def load_image(arguments: Seq[String], canvas: Canvas): (Canvas, Status) =
     if (arguments.size < 1)
@@ -289,13 +313,8 @@ object Canvas {
           line.map(char => Pixel(0, 0, char)).toVector
         }
         val canvas_image = Canvas(pixels(0).size, pixels.size, pixels)
-        // Print canvas
-        canvas_image.pixels.foreach { row =>
-          row.foreach { pixel =>
-            print(pixel.color)
-          }
-          println()
-        }
+        val canvas_rows = canvas_image.pixels.map(_.map(_.color).mkString(""))
+        println(canvas_rows.mkString("\n"))
         (canvas_image, Status())
       } catch {
         case e: Exception => (canvas, Status(error = true, message = s"Image loading error: $e."))
@@ -310,4 +329,3 @@ object Canvas {
 
 
 }
-
