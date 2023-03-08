@@ -51,6 +51,7 @@ object Main extends App {
       case "load_image" => Canvas.load_image
       case "update_pixel" => Canvas.update_pixel
       case "draw_line" => Canvas.draw_line
+      case "draw_rectangle" => Canvas.draw_rectangle
       case _ => Canvas.default
     }
 
@@ -230,17 +231,17 @@ object Canvas {
   if (arguments.size < 3) {
     (canvas, Status(error = true, message = s"draw_line action expects 3 arguments."))
   } else {
-    val startPixel = Pixel(arguments(0))
-    val endPixel = Pixel(arguments(1))
+    val pixel1 = Pixel(arguments(0))
+    val pixel2 = Pixel(arguments(1))
     val color = arguments(2)
 
-    if (startPixel.x == endPixel.x) {
+    if (pixel1.x == pixel2.x) {
       // vertical line
-      val pixels = (startPixel.y to endPixel.y).map(y => Pixel(startPixel.x, y, color.head))
+      val pixels = (pixel1.y to pixel2.y).map(y => Pixel(pixel1.x, y, color.head))
       (canvas.updates(pixels), Status())
-    } else if (startPixel.y == endPixel.y) {
+    } else if (pixel1.y == pixel2.y) {
       // horizontal line
-      val pixels = (startPixel.x to endPixel.x).map(x => Pixel(x, startPixel.y, color.head))
+      val pixels = (pixel1.x to pixel2.x).map(x => Pixel(x, pixel1.y, color.head))
       (canvas.updates(pixels), Status())
     } else {
       // neither horizontal nor vertical line
@@ -248,6 +249,32 @@ object Canvas {
     }
   }
 }
+
+  def draw_rectangle(arguments: Seq[String], canvas: Canvas): (Canvas, Status) = {
+  if (arguments.size < 3) {
+    (canvas, Status(error = true, message = s"draw_rectangle action expects 3 arguments."))
+  } else {
+    val pixel1 = Pixel(arguments(0))
+    val pixel2 = Pixel(arguments(1))
+    val color = arguments(2)
+
+    val topLeftCorner = Pixel(pixel1.x.min(pixel2.x), pixel1.y.min(pixel2.y))
+    val bottomRightCorner = Pixel(pixel1.x.max(pixel2.x), pixel1.y.max(pixel2.y))
+
+    val topLine = s"${topLeftCorner.x},${topLeftCorner.y} ${bottomRightCorner.x},${topLeftCorner.y} $color"
+    val bottomLine = s"${topLeftCorner.x},${bottomRightCorner.y} ${bottomRightCorner.x},${bottomRightCorner.y} $color"
+    val leftLine = s"${topLeftCorner.x},${topLeftCorner.y+1} ${topLeftCorner.x},${bottomRightCorner.y-1} $color"
+    val rightLine = s"${bottomRightCorner.x},${topLeftCorner.y+1} ${bottomRightCorner.x},${bottomRightCorner.y-1} $color"
+
+    val rectanglelines = Seq(topLine, bottomLine, leftLine, rightLine)
+
+    rectanglelines.foldLeft((canvas, Status())) { case ((c, s), line) =>
+      val (updatedCanvas, status) = draw_line(line.split(" ").toSeq, c)
+      (updatedCanvas, Status())
+    }
+  }
+}
+
 
 
 
@@ -283,3 +310,4 @@ object Canvas {
 
 
 }
+
