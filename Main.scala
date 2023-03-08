@@ -49,6 +49,7 @@ object Main extends App {
       case "dummy2" => Canvas.dummy2
       case "new_canvas" => Canvas.new_canvas
       case "load_image" => Canvas.load_image
+      case "update_pixel" => Canvas.update_pixel
       case _ => Canvas.default
     }
 
@@ -120,7 +121,7 @@ case class Canvas(width: Int = 0, height: Int = 0, pixels: Vector[Vector[Pixel]]
    */
   def update(pixel: Pixel): Canvas = {
     
-    val newPixels = pixels // TODO - Update pixels
+    val newPixels = pixels.updated(pixel.y, pixels(pixel.y).updated(pixel.x, pixel))
 
     this.copy(pixels = newPixels)
   }
@@ -204,6 +205,26 @@ object Canvas {
     }
   }
 
+  def update_pixel(arguments: Seq[String], canvas: Canvas): (Canvas, Status) = {
+    if (arguments.size < 3) {
+      (canvas, Status(error = true, message = s"update_pixel action expects 3 arguments."))
+    } else {
+      val x = arguments(0).toInt
+      val y = arguments(1).toInt
+      val color = arguments(2).head
+      val canvas_update = canvas.update(Pixel(x, y, color))
+      
+      // Print canvas
+      canvas_update.pixels.foreach { row =>
+        row.foreach { pixel =>
+          print(pixel.color)
+        }
+        println()
+      }
+      (canvas_update, Status())
+    }
+  }
+
   def load_image(arguments: Seq[String], canvas: Canvas): (Canvas, Status) =
     if (arguments.size < 1)
       (canvas, Status(error = true, message = "load_image action expects one argument"))
@@ -214,18 +235,23 @@ object Canvas {
         val pixels = content.map { line =>
           line.map(char => Pixel(0, 0, char)).toVector
         }
-        val newCanvas = Canvas(pixels(0).size, pixels.size, pixels)
+        val canvas_image = Canvas(pixels(0).size, pixels.size, pixels)
         // Print canvas
-        newCanvas.pixels.foreach { row =>
+        canvas_image.pixels.foreach { row =>
           row.foreach { pixel =>
             print(pixel.color)
           }
           println()
         }
-        (newCanvas, Status())
+        (canvas_image, Status())
       } catch {
         case e: Exception => (canvas, Status(error = true, message = s"Image loading error: $e."))
       }
     }
+
+    
+
+    
+
 
 }
