@@ -50,6 +50,7 @@ object Main extends App {
       case "new_canvas" => Canvas.new_canvas
       case "load_image" => Canvas.load_image
       case "update_pixel" => Canvas.update_pixel
+      case "draw_line" => Canvas.draw_line
       case _ => Canvas.default
     }
 
@@ -225,6 +226,31 @@ object Canvas {
     }
   }
 
+  def draw_line(arguments: Seq[String], canvas: Canvas): (Canvas, Status) = {
+  if (arguments.size < 3) {
+    (canvas, Status(error = true, message = s"draw_line action expects 3 arguments."))
+  } else {
+    val startPixel = Pixel(arguments(0))
+    val endPixel = Pixel(arguments(1))
+    val color = arguments(2)
+
+    if (startPixel.x == endPixel.x) {
+      // vertical line
+      val pixels = (startPixel.y to endPixel.y).map(y => Pixel(startPixel.x, y, color.head))
+      (canvas.updates(pixels), Status())
+    } else if (startPixel.y == endPixel.y) {
+      // horizontal line
+      val pixels = (startPixel.x to endPixel.x).map(x => Pixel(x, startPixel.y, color.head))
+      (canvas.updates(pixels), Status())
+    } else {
+      // neither horizontal nor vertical line
+      (canvas, Status(error = true, message = "draw_line action only supports horizontal or vertical lines"))
+    }
+  }
+}
+
+
+
   def load_image(arguments: Seq[String], canvas: Canvas): (Canvas, Status) =
     if (arguments.size < 1)
       (canvas, Status(error = true, message = "load_image action expects one argument"))
@@ -247,6 +273,8 @@ object Canvas {
       } catch {
         case e: Exception => (canvas, Status(error = true, message = s"Image loading error: $e."))
       }
+
+      
     }
 
     
